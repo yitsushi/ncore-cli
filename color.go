@@ -10,13 +10,20 @@ const (
 	CLI_CYAN    = "\033[36m"
 	CLI_WHITE   = "\033[37m"
 	CLI_NOCOLOR = "\033[0m"
+
+	MODE_COLOR   = false
+	MODE_NOCOLOR = true
 )
 
-var NoColor bool = false
+var noColor bool = false
 
 func GetTerminalColor(color string) string {
-	if NoColor {
+	if noColor {
 		return ""
 	}
 	return color
+}
+
+func setColorMode(mode bool) {
+	noColor = mode
 }

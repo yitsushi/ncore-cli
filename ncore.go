@@ -8,7 +8,6 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -67,18 +66,40 @@ func (n *Ncore) Search(term string, categories string, limit int) []*Torrent {
 		postData.Add("kivalasztott_tipus[]", category)
 	}
 
-	resp, _ := n.client.PostForm(n.getTargetURI("/torrents.php"), postData)
-	torrents := parseTorrentsFromSearch(resp, limit)
+	resp, err := n.client.PostForm(n.getTargetURI("/torrents.php"), postData)
+	checkErr(err, "Connection error!")
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	checkErr(err, "Failed to parse HTML")
+
+	torrents := make([]*Torrent, 0)
+	lines := doc.Find(".box_torrent")
+
+	for line := range lines.Nodes {
+		torrent := NewTorrentFromLine(lines.Eq(line))
+		if torrent == nil {
+			continue
+		}
+		torrents = append(torrents, torrent)
+		if limit < 1 {
+			break
+		}
+		limit--
+	}
+
+	// torrents := parseTorrentsFromSearch(resp, limit)
 
 	return torrents
 }
 
 func (n *Ncore) Download(torrentId int64) {
-	resp, _ := n.client.Get(
+	resp, err := n.client.Get(
 		n.getTargetURI(
 			fmt.Sprintf("/torrents.php?action=download&id=%d", torrentId),
 		),
 	)
+	checkErr(err, "Connection Error!")
 	defer resp.Body.Close()
 
 	_, params, err := mime.ParseMediaType(resp.Header.Get("Content-Disposition"))
@@ -87,7 +108,8 @@ func (n *Ncore) Download(torrentId int64) {
 	file, err := os.Create(params["filename"])
 	checkErr(err, "File open error!")
 
-	content, _ := ioutil.ReadAll(resp.Body)
+	content, err := ioutil.ReadAll(resp.Body)
+	checkErr(err, "Parse error!")
 
 	file.Write(content)
 	file.Close()
@@ -99,54 +121,4 @@ func (n *Ncore) Download(torrentId int64) {
 
 func (n *Ncore) getTargetURI(path string) string {
 	return fmt.Sprintf("https://ncore.cc%s", path)
-}
-
-func parseTorrentsFromSearch(resp *http.Response, limit int) []*Torrent {
-	defer resp.Body.Close()
-
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	checkErr(err, "Failed to parse HTML")
-
-	torrents := make([]*Torrent, 0)
-
-	lines := doc.Find(".box_torrent")
-	for line := range lines.Nodes {
-		torrent := lines.Eq(line)
-		torrentLink := torrent.Find(".torrent_txt a")
-		title, exists := torrentLink.Attr("title")
-
-		if !exists {
-			continue
-		}
-
-		if limit < 1 {
-			break
-		}
-		limit--
-
-		href, _ := torrentLink.Attr("href")
-		sepIndex := strings.Index(href, "id=") + 3
-		torrentId, _ := strconv.ParseInt(href[sepIndex:], 10, 32)
-
-		seed, _ := strconv.ParseInt(torrent.Find(".box_s2").Text(), 10, 32)
-		leech, _ := strconv.ParseInt(torrent.Find(".box_l2").Text(), 10, 32)
-
-		category, _ := torrent.Find(".box_alap_img img").Attr("alt")
-
-		torrents = append(
-			torrents,
-			&Torrent{
-				Id:         torrentId,
-				Name:       title,
-				UploadedAt: torrent.Find(".box_feltoltve2").Text(),
-				Download:   torrent.Find(".box_d2").Text(),
-				Size:       torrent.Find(".box_meret2").Text(),
-				Seed:       seed,
-				Leech:      leech,
-				Type:       category,
-			},
-		)
-	}
-
-	return torrents
 }

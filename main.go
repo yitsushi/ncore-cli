@@ -15,12 +15,20 @@ func main() {
 	categories := flag.String("c", "", categoryHelp())
 	nocolor := flag.Bool("b", false, "Black & White; aka no color")
 	torrentId := flag.Int64("d", 0, "Download torrent by ID")
+	oneline := flag.Bool("1", false, "Oneline display mode")
 	flag.Parse()
 
-	NoColor = *nocolor
+	setColorMode(*nocolor)
 
 	username := os.Getenv("NCORE_LOGIN")
 	password := os.Getenv("NCORE_PASSWORD")
+
+	if len(username) == 0 || len(password) == 0 {
+		fmt.Println("Set up your login credentials with environment variables!")
+		fmt.Println("  NCORE_LOGIN=\"nCoreLoginUsername\"")
+		fmt.Println("  NCORE_PASSWORD=\"nCoreLoginPassword\"")
+		return
+	}
 
 	client := NewNcoreClient(username, password)
 
@@ -32,7 +40,11 @@ func main() {
 		torrents := client.Search(*keyword, *categories, *limit)
 
 		for _, torrent := range torrents {
-			fmt.Println(torrent.ToStringMultiLine())
+			if *oneline {
+				fmt.Println(torrent.ToString())
+			} else {
+				fmt.Println(torrent.ToStringMultiLine())
+			}
 		}
 
 		return
