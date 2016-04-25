@@ -85,4 +85,5 @@ Done. :D
 
 # Collaborate
 
-Just send a PR and we can talk about it.
+Just send a PR and we can talk about it. Or just simply create new issues about
+your wishes :)
