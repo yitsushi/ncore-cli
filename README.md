@@ -1,3 +1,8 @@
+# Download latest version
+
+Jump to [Tags](http://gitlab.cheppers.com/yitsushi/ncore-cli/tags/) and
+find your binary depends on your operation system / processor architecture.
+
 # How to use
 
 ```
