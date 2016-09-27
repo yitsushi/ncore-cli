@@ -7,6 +7,34 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+func NewHitAndRunTorrentFromLine(torrent *goquery.Selection) *HitAndRunTorrent {
+	torrentLink := torrent.Find(".hnr_tname a")
+	title, exists := torrentLink.Attr("title")
+
+	if !exists {
+		return nil
+	}
+
+	href, _ := torrentLink.Attr("href")
+	sepIndex := strings.Index(href, "id=") + 3
+	torrentId, err := strconv.ParseInt(href[sepIndex:], 10, 32)
+	checkErr(err, "nCore::TorrentId parse error!")
+
+	ratio, _ := strconv.ParseFloat(torrent.Find(".hnr_tratio span").Text(), 64)
+
+	return &HitAndRunTorrent{
+		Id:         torrentId,
+		Name:       title,
+		Status:     torrent.Find(".hnr_tseed span").Text(),
+		Start:      torrent.Find(".hnr_tstart").Text(),
+		Updated:    torrent.Find(".hnr_tactive").Text(),
+		Uploaded:   torrent.Find(".hnr_tup").Text(),
+		Downloaded: torrent.Find(".hnr_tdown").Text(),
+		SeedUntil:  torrent.Find(".hnr_ttimespent span").Text(),
+		Ratio:      ratio,
+	}
+}
+
 func NewTorrentFromLine(torrent *goquery.Selection) *Torrent {
 	torrentLink := torrent.Find(".torrent_txt a")
 	title, exists := torrentLink.Attr("title")

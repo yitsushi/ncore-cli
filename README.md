@@ -37,6 +37,7 @@ find your binary depends on your operation system / processor architecture.
       Download torrent by ID
   -l int
       Limit results; Max 25 (default 25)
+  -r  HitAndRun list
   -s string
       Search keyword
 ```

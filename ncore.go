@@ -50,6 +50,28 @@ func (n *Ncore) Login() {
 	n.client.PostForm(n.getTargetURI("/login.php"), postData)
 }
 
+func (n *Ncore) HitAndRun() []*HitAndRunTorrent {
+	resp, err := n.client.Get(n.getTargetURI("/hitnrun.php"))
+	checkErr(err, "Connection error!")
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	checkErr(err, "Failed to parse HTML")
+
+	lines := doc.Find(".hnr_torrents")
+
+	torrents := make([]*HitAndRunTorrent, 0)
+	for line := range lines.Nodes {
+		torrent := NewHitAndRunTorrentFromLine(lines.Eq(line))
+		if torrent == nil {
+			continue
+		}
+		torrents = append(torrents, torrent)
+	}
+
+	return torrents
+}
+
 func (n *Ncore) Search(term string, categories string, limit int) []*Torrent {
 	var categoryArray []string
 

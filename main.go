@@ -15,6 +15,7 @@ func main() {
 	categories := flag.String("c", "", categoryHelp())
 	nocolor := flag.Bool("b", false, "Black & White; aka no color")
 	torrentId := flag.Int64("d", 0, "Download torrent by ID")
+	hitandrun := flag.Bool("r", false, "HitAndRun list")
 	oneline := flag.Bool("1", false, "Oneline display mode")
 	flag.Parse()
 
@@ -36,6 +37,19 @@ func main() {
 		client.Download(*torrentId)
 		return
 	}
+
+	if *hitandrun {
+		torrents := client.HitAndRun()
+		for _, torrent := range torrents {
+			if *oneline {
+				fmt.Println(torrent.ToString())
+			} else {
+				fmt.Println(torrent.ToStringMultiLine())
+			}
+		}
+		return
+	}
+
 	if len(*keyword) > 0 {
 		torrents := client.Search(*keyword, *categories, *limit)
 
