@@ -1,6 +1,6 @@
 # Download latest version
 
-Jump to [Tags](http://gitlab.cheppers.com/yitsushi/ncore-cli/tags/) and
+Jump to [Releases](https://github.com/yitsushi/ncore-cli/releases) and
 find your binary depends on your operation system / processor architecture.
 
 # How to use
